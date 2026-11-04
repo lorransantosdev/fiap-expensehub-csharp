@@ -1,0 +1,177 @@
+@host = http://localhost:5245
+@employeePassword = {{$processEnv EXPENSEHUB_USER_PASSWORD}}
+
+# CP3 — relatórios em segundo plano. Tokens são obtidos por login em cada execução (nada é persistido aqui).
+# Pré-requisito: usuários employee-a, employee-b e auditor cadastrados com as roles Employee/Employee/Auditor
+# (fluxo de cadastro e atribuição de roles em ExpenseHub.Api.http ou scripts/cp3/Invoke-Cp3Seed.ps1).
+
+### Login Employee A
+# @name loginA
+POST {{host}}/login
+Content-Type: application/json
+
+{
+  "email": "employee-a@expensehub.local",
+  "password": "{{employeePassword}}"
+}
+
+###
+@tokenA = {{loginA.response.body.$.accessToken}}
+
+### Login Employee B
+# @name loginB
+POST {{host}}/login
+Content-Type: application/json
+
+{
+  "email": "employee-b@expensehub.local",
+  "password": "{{employeePassword}}"
+}
+
+###
+@tokenB = {{loginB.response.body.$.accessToken}}
+
+### Login Auditor
+# @name loginAuditor
+POST {{host}}/login
+Content-Type: application/json
+
+{
+  "email": "auditor@expensehub.local",
+  "password": "{{employeePassword}}"
+}
+
+###
+@tokenAuditor = {{loginAuditor.response.body.$.accessToken}}
+
+### Employee A solicita Mine -> 202 + Location
+# @name requestMine
+POST {{host}}/api/reports
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "fromDate": "2026-09-01",
+  "toDate": "2026-09-30",
+  "scope": "Mine"
+}
+
+###
+@reportId = {{requestMine.response.body.$.id}}
+
+### Acompanha até Completed
+GET {{host}}/api/reports/{{reportId}}
+Authorization: Bearer {{tokenA}}
+
+### Lista somente as próprias solicitações
+GET {{host}}/api/reports
+Authorization: Bearer {{tokenA}}
+
+### Baixa a planilha (200 + .xlsx quando Completed; 409 enquanto Pending/Processing)
+GET {{host}}/api/reports/{{reportId}}/excel
+Authorization: Bearer {{tokenA}}
+
+### Auditor solicita Global -> 202
+# @name requestGlobal
+POST {{host}}/api/reports
+Authorization: Bearer {{tokenAuditor}}
+Content-Type: application/json
+
+{
+  "fromDate": "2026-09-01",
+  "toDate": "2026-09-30",
+  "scope": "Global"
+}
+
+###
+@globalReportId = {{requestGlobal.response.body.$.id}}
+
+### Auditor acompanha o próprio relatório Global
+GET {{host}}/api/reports/{{globalReportId}}
+Authorization: Bearer {{tokenAuditor}}
+
+### Negativo: sem token -> 401
+GET {{host}}/api/reports
+
+### Negativo: Employee pede Global -> 403
+POST {{host}}/api/reports
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "fromDate": "2026-09-01",
+  "toDate": "2026-09-30",
+  "scope": "Global"
+}
+
+### Negativo: Auditor (sem Employee) pede Mine -> 403
+POST {{host}}/api/reports
+Authorization: Bearer {{tokenAuditor}}
+Content-Type: application/json
+
+{
+  "fromDate": "2026-09-01",
+  "toDate": "2026-09-30",
+  "scope": "Mine"
+}
+
+### Negativo: período invertido -> 400
+POST {{host}}/api/reports
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "fromDate": "2026-09-30",
+  "toDate": "2026-09-01",
+  "scope": "Mine"
+}
+
+### Negativo: escopo inválido -> 400
+POST {{host}}/api/reports
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "fromDate": "2026-09-01",
+  "toDate": "2026-09-30",
+  "scope": "Everyone"
+}
+
+### Negativo: data inválida -> 400
+POST {{host}}/api/reports
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "fromDate": "2026-02-30",
+  "toDate": "2026-09-30",
+  "scope": "Mine"
+}
+
+### Negativo: ownerId enviado pelo cliente -> 400 (campo não aceito)
+POST {{host}}/api/reports
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "fromDate": "2026-09-01",
+  "toDate": "2026-09-30",
+  "scope": "Mine",
+  "ownerId": "outro-usuario"
+}
+
+### Negativo: Employee B consulta relatório de A -> 404
+GET {{host}}/api/reports/{{reportId}}
+Authorization: Bearer {{tokenB}}
+
+### Negativo: Employee B baixa Excel de A -> 404
+GET {{host}}/api/reports/{{reportId}}/excel
+Authorization: Bearer {{tokenB}}
+
+### Negativo: Auditor consulta relatório de A -> 404
+GET {{host}}/api/reports/{{reportId}}
+Authorization: Bearer {{tokenAuditor}}
+
+### Negativo: Auditor baixa Excel de A -> 404
+GET {{host}}/api/reports/{{reportId}}/excel
+Authorization: Bearer {{tokenAuditor}}

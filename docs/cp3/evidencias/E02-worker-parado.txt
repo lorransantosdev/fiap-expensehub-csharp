@@ -1,0 +1,39 @@
+# E02 — Worker parado e retomado
+   Container expensehub-worker-1 Stopping 
+   Container expensehub-worker-1 Stopped 
+> Post /api/reports (Bearer <token omitido>)
+  body: {"fromDate":"2026-09-01","toDate":"2026-09-30","scope":"Mine"}
+< 202
+  Location: http://localhost:5245/api/reports/e348a7f3-f9af-4b80-ad8e-71272eb0316a
+  Content-Type: application/json; charset=utf-8
+  {"id":"e348a7f3-f9af-4b80-ad8e-71272eb0316a","scope":"Mine","fromDate":"2026-09-01","toDate":"2026-09-30","status":"Pending","createdAt":"2026-11-04T23:25:08.8929219Z","startedAt":null,"completedAt":null,"result":null,"error":null}
+reportId E02 = e348a7f3-f9af-4b80-ad8e-71272eb0316a
+  fila expensehub.reports: durable=True ready=1 unacked=0 consumers=0
+> Get /api/reports/e348a7f3-f9af-4b80-ad8e-71272eb0316a (Bearer <token omitido>)
+< 200
+  Content-Type: application/json; charset=utf-8
+  {"id":"e348a7f3-f9af-4b80-ad8e-71272eb0316a","scope":"Mine","fromDate":"2026-09-01","toDate":"2026-09-30","status":"Pending","createdAt":"2026-11-04T23:25:08.8929219Z","startedAt":null,"completedAt":null,"result":null,"error":null}
+> Get /api/reports/e348a7f3-f9af-4b80-ad8e-71272eb0316a/excel (Bearer <token omitido>)
+< 409
+  Content-Type: application/json; charset=utf-8
+  {"title":"Conflito de estado","status":409,"detail":"O relatório está Pending; a planilha só existe para solicitações Completed."}
+   Container expensehub-rabbitmq-1 Running 
+   Container expensehub-web-1 Running 
+   Container expensehub-rabbitmq-1 Waiting 
+   Container expensehub-rabbitmq-1 Healthy 
+   Container expensehub-rabbitmq-1 Waiting 
+   Container expensehub-rabbitmq-1 Healthy 
+   Container expensehub-worker-1 Starting 
+   Container expensehub-worker-1 Started 
+  [poll 20:25:17] status=Pending
+  [poll 20:25:18] status=Pending
+  [poll 20:25:19] status=Completed
+  fila expensehub.reports: durable=True ready=0 unacked=0 consumers=1
+> Get /api/reports/e348a7f3-f9af-4b80-ad8e-71272eb0316a (Bearer <token omitido>)
+< 200
+  Content-Type: application/json; charset=utf-8
+  {"id":"e348a7f3-f9af-4b80-ad8e-71272eb0316a","scope":"Mine","fromDate":"2026-09-01","toDate":"2026-09-30","status":"Completed","createdAt":"2026-11-04T23:25:08.8929219Z","startedAt":"2026-11-04T23:25:19.5721648Z","completedAt":"2026-11-04T23:25:19.6892307Z","result":{"generatedAt":"2026-11-04T23:25:19.6833176Z","totalCount":3,"totalAmount":175.0,"byStatus":[{"status":"Draft","count":0,"amount":0},{"status":"Submitted","count":0,"amount":0},{"status":"Approved","count":2,"amount":150.0},{"status":"Rejected","count":0,"amount":0},{"status":"Paid","count":1,"amount":25.0}]},"error":null}
+  worker-1  |       Mensagem do relatório e348a7f3-f9af-4b80-ad8e-71272eb0316a recebida (redelivered=False).
+  worker-1  |       Relatório e348a7f3-f9af-4b80-ad8e-71272eb0316a iniciado (tentativa 1, escopo Mine).
+  worker-1  |       Relatório e348a7f3-f9af-4b80-ad8e-71272eb0316a concluído com 3 reembolsos.
+  worker-1  |       Mensagem do relatório e348a7f3-f9af-4b80-ad8e-71272eb0316a confirmada (ack) com desfecho Completed.

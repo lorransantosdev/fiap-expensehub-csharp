@@ -1,0 +1,14 @@
+# Versão em execução
+2026-11-04T23:25:02.3405225Z
+SERVICE    IMAGE                                                                                STATUS
+rabbitmq   rabbitmq:4.1-management                                                              Up 2 minutes (healthy)
+web        ghcr.io/lorransantosdev/expensehub-web:832f4354e08fd40888a2bf86081743186c43eabb      Up 25 seconds
+worker     ghcr.io/lorransantosdev/expensehub-worker:832f4354e08fd40888a2bf86081743186c43eabb   Up 24 seconds
+> Get /health (anônimo)
+< 200
+  Content-Type: application/json; charset=utf-8
+  {"status":"ok","version":"832f4354e08fd40888a2bf86081743186c43eabb"}
+  web revision label: 832f4354e08fd40888a2bf86081743186c43eabb
+  web image digest: sha256:ce3a922b3d77e8bc67bbf931d9215899b61360287dbf94f6c4ea37a8f8f589d7
+  worker revision label: 832f4354e08fd40888a2bf86081743186c43eabb
+  worker image digest: sha256:01a527afe3b782b66cc5634692c73ebace628c43ba327700eabcaacd988591e3

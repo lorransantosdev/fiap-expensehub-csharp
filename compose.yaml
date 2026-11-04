@@ -1,5 +1,5 @@
 # Executa as imagens publicadas no GHCR (identificadas pelo SHA do commit), RabbitMQ e o volume do SQLite.
-# Configure antes: cp .env.example .env  (e preencha as senhas).
+# Configure antes: cp .env.example .env  (ADMIN_PASSWORD e RABBITMQ_PASSWORD são obrigatórias).
 name: expensehub
 
 services:
@@ -9,7 +9,7 @@ services:
     hostname: expensehub-rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-expensehub}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?defina RABBITMQ_PASSWORD no .env}
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD}"
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -30,10 +30,10 @@ services:
       ConnectionStrings__DefaultConnection: "Data Source=/data/expensehub.db;Default Timeout=30"
       DataProtection__KeysPath: /data/keys
       Seed__Admin__Email: ${ADMIN_EMAIL:-admin@expensehub.local}
-      Seed__Admin__Password: ${ADMIN_PASSWORD:?defina ADMIN_PASSWORD no .env}
+      Seed__Admin__Password: "${ADMIN_PASSWORD}"
       RabbitMq__HostName: rabbitmq
       RabbitMq__UserName: ${RABBITMQ_USER:-expensehub}
-      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__Password: "${RABBITMQ_PASSWORD}"
       RabbitMq__QueueName: expensehub.reports
     ports:
       - "5245:8080"
@@ -52,7 +52,7 @@ services:
       ConnectionStrings__DefaultConnection: "Data Source=/data/expensehub.db;Default Timeout=30"
       RabbitMq__HostName: rabbitmq
       RabbitMq__UserName: ${RABBITMQ_USER:-expensehub}
-      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__Password: "${RABBITMQ_PASSWORD}"
       RabbitMq__QueueName: expensehub.reports
     volumes:
       - app-data:/data
