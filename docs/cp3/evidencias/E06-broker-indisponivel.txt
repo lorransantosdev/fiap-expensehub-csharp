@@ -1,0 +1,24 @@
+# E06 (complementar) — Broker indisponível: publicação sem confirmação
+2026-11-04T23:52:23.9058656Z
+   Container expensehub-rabbitmq-1 Stopping 
+   Container expensehub-rabbitmq-1 Stopped 
+> POST /api/reports (Bearer <token omitido>) body: {"scope":"Mine","toDate":"2026-09-30","fromDate":"2026-09-01"}
+< 503
+  {"id":"87cb7291-5098-4461-8d64-23a8af599659","scope":"Mine","fromDate":"2026-09-01","toDate":"2026-09-30","status":"Pending","createdAt":"2026-11-04T23:52:29.5543837Z","startedAt":null,"completedAt":null,"result":null,"error":{"code":"PublishNotConfirmed","message":"A solicitação foi registrada, mas a fila não confirmou o recebimento. Faça um novo pedido mais tarde."}}
+> GET /api/reports/87cb7291-5098-4461-8d64-23a8af599659 (Bearer <token omitido>)
+< 200
+  {"id":"87cb7291-5098-4461-8d64-23a8af599659","scope":"Mine","fromDate":"2026-09-01","toDate":"2026-09-30","status":"Pending","createdAt":"2026-11-04T23:52:29.5543837Z","startedAt":null,"completedAt":null,"result":null,"error":null}
+  web-1  |       Relatório 87cb7291-5098-4461-8d64-23a8af599659 registrado como Pending (escopo Mine).
+  web-1  |       Relatório 87cb7291-5098-4461-8d64-23a8af599659 persistido, mas a publicação não foi confirmada.
+  web-1  |       ExpenseHub.Api.Reports.ReportPublishException: Publicação de 87cb7291-5098-4461-8d64-23a8af599659 não confirmada: BrokerUnreachableException.
+   Container expensehub-rabbitmq-1 Starting 
+   Container expensehub-rabbitmq-1 Started 
+  rabbitmq: healthy
+Broker de volta: novo POST -> 202, id 8d2caa82-be15-491f-8f11-195d1258c96a (novo id; o pedido anterior não é republicado)
+  status do novo pedido: Completed
+  status do pedido sem confirmação (87cb7291-5098-4461-8d64-23a8af599659): Pending (sem mensagem na fila, o worker não tem o que consumir)
+  worker-1  |       Worker consumindo a fila expensehub.reports (prefetch 1, ack manual).
+  worker-1  |       Mensagem do relatório 8d2caa82-be15-491f-8f11-195d1258c96a recebida (redelivered=False).
+  worker-1  |       Relatório 8d2caa82-be15-491f-8f11-195d1258c96a iniciado (tentativa 1, escopo Mine).
+  worker-1  |       Relatório 8d2caa82-be15-491f-8f11-195d1258c96a concluído com 3 reembolsos.
+  worker-1  |       Mensagem do relatório 8d2caa82-be15-491f-8f11-195d1258c96a confirmada (ack) com desfecho Completed.

@@ -1,0 +1,19 @@
+# E01 (complemento) — planilha aberta no Microsoft Excel
+2026-11-04T23:51:30.1031568Z
+> GET /api/reports/fcda4901-e324-4c16-bb4c-2bba6e5df193/excel (Bearer <token omitido>)
+< 200  Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet  Content-Disposition: attachment; filename=report-fcda4901-e324-4c16-bb4c-2bba6e5df193.xlsx; filename*=UTF-8''report-fcda4901-e324-4c16-bb4c-2bba6e5df193.xlsx
+Aplicativo: Microsoft Excel 16.0
+Aba: Relatorio; intervalo usado: A1:C13
+  A1=Id [String] | B1=fcda4901-e324-4c16-bb4c-2bba6e5df193 [String]
+  A2=Escopo [String] | B2=Mine [String]
+  A3=De [String] | B3=2026-09-01 [String]
+  A4=Até [String] | B4=2026-09-30 [String]
+  A5=Gerado em (UTC) [String] | B5=2026-11-04T23:25:05Z [String]
+  A7=Estado [String] | B7=Quantidade [String] | C7=Valor [String]
+  A8=Draft [String] | B8=0 [Double] | C8=0 [Double]
+  A9=Submitted [String] | B9=0 [Double] | C9=0 [Double]
+  A10=Approved [String] | B10=2 [Double] | C10=150 [Double]
+  A11=Rejected [String] | B11=0 [Double] | C11=0 [Double]
+  A12=Paid [String] | B12=1 [Double] | C12=25 [Double]
+  A13=Total [String] | B13=3 [Double] | C13=175 [Double]
+Total por fórmula do Excel (SOMA C8:C12) = 175
