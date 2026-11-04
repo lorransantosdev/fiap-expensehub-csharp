@@ -1,7 +1,12 @@
-# ExpenseHub — Checkpoint 2 (C#)
+# ExpenseHub — Checkpoints 2 e 3 (C#)
 
 API REST corporativa de reembolsos: funcionários registram despesas, aprovadores analisam, o financeiro registra
 o pagamento e auditores consultam todo o histórico.
+
+**CP3:** relatórios de reembolsos por período processados em segundo plano (RabbitMQ + worker C#), com
+acompanhamento do processamento e download do resultado em Excel. Contrato, mensageria, falhas, execução com as
+imagens publicadas e testes: [docs/CP3.md](docs/CP3.md). Dossiê dos experimentos:
+[docs/cp3/EXPERIMENTOS.md](docs/cp3/EXPERIMENTOS.md).
 
 O backlog e os critérios de aceite estão nas issues do repositório original
 [Racass/checkpoint-csharpracass-expensehub](https://github.com/Racass/checkpoint-csharpracass-expensehub).
@@ -12,6 +17,9 @@ O backlog e os critérios de aceite estão nas issues do repositório original
 - Entity Framework Core 10 com SQLite
 - ASP.NET Core Identity com bearer token (`/login`, `/register`)
 - MSTest para testes unitários
+- RabbitMQ.Client 7 (fila durável, publisher confirms, ack manual) e worker .NET (`ExpenseHub.Worker`)
+- ClosedXML para a planilha `.xlsx`
+- Docker Compose com imagens publicadas no GHCR
 
 ## Pré-requisitos
 
@@ -134,6 +142,8 @@ Localmente, com PowerShell 7: `pwsh ./scripts/Invoke-CodeQuality.ps1`.
 
 ## Documentação
 
+- [CP3 — relatórios em segundo plano](docs/CP3.md)
+- [CP3 — dossiê dos experimentos E01–E05](docs/cp3/EXPERIMENTOS.md)
 - [Arquitetura e convenções do grupo](docs/ARQUITETURA.md)
 - [Enunciado](docs/ENUNCIADO.md)
 - [Requisitos e contratos](docs/REQUISITOS.md)
@@ -144,6 +154,11 @@ Localmente, com PowerShell 7: `pwsh ./scripts/Invoke-CodeQuality.ps1`.
 - [Regras do pipeline de qualidade](docs/code-quality-rules.md)
 
 ## Integrantes
+
 - Lorran dos Santos Sarmento - RM 558982
-- Fabiano Zague - RM 555524
-- Pedro Certo - RM 556268
+- Vinícius - RM 555200
+- Maria - RM 557478
+
+A base do CP2 (commit `8b75617`) veio de
+[fabianoZagDev/csharp-cp2-2sem](https://github.com/fabianoZagDev/csharp-cp2-2sem), onde Lorran participou do
+desenvolvimento; o CP3 foi desenvolvido neste repositório.
