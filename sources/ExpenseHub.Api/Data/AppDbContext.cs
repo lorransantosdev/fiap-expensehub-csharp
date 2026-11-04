@@ -44,6 +44,11 @@ public class AppDbContext : IdentityDbContext<IdentityUser>
     /// </summary>
     public DbSet<PaymentRecord> PaymentRecords => Set<PaymentRecord>();
 
+    /// <summary>
+    /// Obtém as solicitações de relatório.
+    /// </summary>
+    public DbSet<ReportRequest> ReportRequests => Set<ReportRequest>();
+
     /// <inheritdoc />
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
@@ -80,6 +85,14 @@ public class AppDbContext : IdentityDbContext<IdentityUser>
             if (entry.State is EntityState.Added or EntityState.Modified)
             {
                 entry.Property(expense => expense.Version).CurrentValue = Guid.NewGuid();
+            }
+        }
+
+        foreach (EntityEntry<ReportRequest> entry in ChangeTracker.Entries<ReportRequest>())
+        {
+            if (entry.State is EntityState.Added or EntityState.Modified)
+            {
+                entry.Property(report => report.Version).CurrentValue = Guid.NewGuid();
             }
         }
     }

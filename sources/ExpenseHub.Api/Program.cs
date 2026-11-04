@@ -1,12 +1,16 @@
 using System;
+using System.IO;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using ExpenseHub.Api.Auth;
 using ExpenseHub.Api.Data;
 using ExpenseHub.Api.Errors;
+using ExpenseHub.Api.Messaging;
+using ExpenseHub.Api.Reports;
 using ExpenseHub.Api.Services;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -53,6 +57,20 @@ internal static class Program
         builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
         builder.Services.AddScoped<IExpenseService, ExpenseService>();
         builder.Services.AddScoped<IUserService, UserService>();
+
+        builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(RabbitMqOptions.SectionName));
+        builder.Services.AddSingleton<IReportPublisher, RabbitMqReportPublisher>();
+        builder.Services.AddScoped<IReportRepository, ReportRepository>();
+        builder.Services.AddScoped<IReportService, ReportService>();
+
+        string? keysPath = builder.Configuration["DataProtection:KeysPath"];
+
+        if (!string.IsNullOrWhiteSpace(keysPath))
+        {
+            builder.Services.AddDataProtection()
+                .SetApplicationName("ExpenseHub")
+                .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+        }
 
         WebApplication app = builder.Build();
 
