@@ -1,7 +1,9 @@
 # CP3 — Dossiê dos experimentos E01–E05
 
 Ambiente executado em 2026-11-04 (UTC) com `docker compose` e as **imagens publicadas** no GHCR para o commit
-`832f4354e08fd40888a2bf86081743186c43eabb`:
+`832f4354e08fd40888a2bf86081743186c43eabb` (merge do PR #4, último commit que altera o código da web e do worker;
+os commits seguintes mudam somente documentação, scripts e testes, e o workflow `images` também publica imagens
+com o SHA de cada um deles):
 
 | Serviço | Imagem | Digest local |
 | --- | --- | --- |
@@ -25,6 +27,7 @@ $env:EXPENSEHUB_ADMIN_PASSWORD = '<ADMIN_PASSWORD do .env>'
 $env:EXPENSEHUB_USER_PASSWORD = '<senha para os usuários de teste>'
 ./scripts/cp3/Invoke-Cp3Seed.ps1            # usuários, roles e reembolsos conhecidos, só pela API
 ./scripts/cp3/Invoke-Cp3Experiments.ps1     # E01–E05, grava docs/cp3/evidencias
+./scripts/cp3/Invoke-Cp3BrokerDown.ps1      # E06 complementar (para e religa só o RabbitMQ)
 ```
 
 Dados conhecidos (criados pela API, passando por envio, aprovação e pagamento):
@@ -55,6 +58,9 @@ linha de log (`ExpenseHub web/worker iniciado na versão 832f4354…`) confirmam
   `Content-Disposition: attachment; filename=report-fcda4901-….xlsx`. A planilha foi aberta como pacote Open XML
   e transcrita no arquivo: id, escopo, período, instante de geração e a tabela com os cinco estados e o total, com
   quantidades e valores em **células numéricas** iguais ao resultado salvo.
+- A mesma planilha foi aberta no **Microsoft Excel 16.0** por automação
+  ([`E01b-excel-aberto-no-excel.txt`](evidencias/E01b-excel-aberto-no-excel.txt)): aba `Relatorio`, intervalo
+  `A1:C13`, quantidades e valores lidos pelo Excel como números (`Double`) e `SOMA(C8:C12) = 175`.
 - Global (auditor) `857f4dd2-26c9-47ee-bc4f-4b5e6d47edac`: **4 / 375**.
 - Logs correlacionados pelo id: web `registrado como Pending` → `publicado com confirmação do broker`; worker
   `recebida` → `iniciado (tentativa 1)` → `concluído com 3 reembolsos` → `confirmada (ack) com desfecho Completed`.
@@ -110,6 +116,20 @@ Requisições na ordem do arquivo:
 3. O token emitido antes da recriação continuou válido (chaves de Data Protection em `/data/keys` no volume).
 4. `GET /api/reports/fcda4901-…` depois da recriação → resultado **igual** ao anterior; o Excel também foi baixado
    de novo (**200**).
+
+## E06 (complementar) — Broker indisponível — [`E06-broker-indisponivel.txt`](evidencias/E06-broker-indisponivel.txt)
+
+Não é obrigatório, mas confirma em execução o tratamento já coberto por testes:
+
+1. `docker compose stop rabbitmq` (somente o broker).
+2. `POST` (employee-a) → **503** com o envelope do id persistido `87cb7291-5098-4461-8d64-23a8af599659`,
+   `status Pending` e `error.code = PublishNotConfirmed` (mensagem sanitizada, sem detalhes internos).
+3. `GET` desse id → **200**, `Pending`. Log da web: `registrado como Pending` → `persistido, mas a publicação
+   não foi confirmada` (`BrokerUnreachableException`).
+4. `docker compose start rabbitmq` → `healthy`. Um **novo** `POST` → **202** e `Completed` (id
+   `8d2caa82-be15-491f-8f11-195d1258c96a`); o worker reconectou sozinho.
+5. O pedido `87cb7291-…` continua `Pending`: nenhuma mensagem foi confirmada, então reiniciar o worker ou o broker
+   não o recupera — exatamente a janela sem Transactional Outbox descrita abaixo.
 
 ## Diagnóstico
 
