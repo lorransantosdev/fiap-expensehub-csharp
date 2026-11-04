@@ -22,7 +22,7 @@ services:
       retries: 12
 
   web:
-    image: ${IMAGE_REGISTRY:-ghcr.io/fabianozagdev}/expensehub-web:${IMAGE_TAG:?defina IMAGE_TAG com o SHA do commit publicado}
+    image: ${IMAGE_REGISTRY:-ghcr.io/lorransantosdev}/expensehub-web:${IMAGE_TAG:?defina IMAGE_TAG com o SHA do commit publicado}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -42,7 +42,7 @@ services:
     restart: unless-stopped
 
   worker:
-    image: ${IMAGE_REGISTRY:-ghcr.io/fabianozagdev}/expensehub-worker:${IMAGE_TAG:?defina IMAGE_TAG com o SHA do commit publicado}
+    image: ${IMAGE_REGISTRY:-ghcr.io/lorransantosdev}/expensehub-worker:${IMAGE_TAG:?defina IMAGE_TAG com o SHA do commit publicado}
     depends_on:
       rabbitmq:
         condition: service_healthy
