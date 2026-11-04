@@ -1,0 +1,64 @@
+# Executa as imagens publicadas no GHCR (identificadas pelo SHA do commit), RabbitMQ e o volume do SQLite.
+# Configure antes: cp .env.example .env  (e preencha as senhas).
+name: expensehub
+
+services:
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    # O nome do nó define o diretório de dados; fixá-lo mantém filas e mensagens persistentes entre recriações.
+    hostname: expensehub-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-expensehub}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?defina RABBITMQ_PASSWORD no .env}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
+  web:
+    image: ${IMAGE_REGISTRY:-ghcr.io/lorransantosdev}/expensehub-web:${IMAGE_TAG:?defina IMAGE_TAG com o SHA do commit publicado}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: "Data Source=/data/expensehub.db;Default Timeout=30"
+      DataProtection__KeysPath: /data/keys
+      Seed__Admin__Email: ${ADMIN_EMAIL:-admin@expensehub.local}
+      Seed__Admin__Password: ${ADMIN_PASSWORD:?defina ADMIN_PASSWORD no .env}
+      RabbitMq__HostName: rabbitmq
+      RabbitMq__UserName: ${RABBITMQ_USER:-expensehub}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__QueueName: expensehub.reports
+    ports:
+      - "5245:8080"
+    volumes:
+      - app-data:/data
+    restart: unless-stopped
+
+  worker:
+    image: ${IMAGE_REGISTRY:-ghcr.io/lorransantosdev}/expensehub-worker:${IMAGE_TAG:?defina IMAGE_TAG com o SHA do commit publicado}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      web:
+        condition: service_started
+    environment:
+      ConnectionStrings__DefaultConnection: "Data Source=/data/expensehub.db;Default Timeout=30"
+      RabbitMq__HostName: rabbitmq
+      RabbitMq__UserName: ${RABBITMQ_USER:-expensehub}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__QueueName: expensehub.reports
+    volumes:
+      - app-data:/data
+    restart: unless-stopped
+
+volumes:
+  # Banco SQLite compartilhado pela web e pelo worker, mais as chaves de Data Protection dos tokens.
+  app-data:
+  rabbitmq-data:

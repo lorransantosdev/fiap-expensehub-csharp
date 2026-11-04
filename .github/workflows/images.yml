@@ -1,0 +1,75 @@
+name: images
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Testes unitários
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Testes (sem banco, rede ou RabbitMQ reais)
+        run: dotnet test sources/ExpenseHub.slnx -c Release
+
+  publish:
+    name: Publicar imagens web e worker
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Registry em minúsculas
+        id: registry
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build e push da web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: sources/ExpenseHub.Api/Dockerfile
+          push: true
+          build-args: GIT_SHA=${{ github.sha }}
+          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          tags: ${{ steps.registry.outputs.name }}/expensehub-web:${{ github.sha }}
+
+      - name: Build e push do worker
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: sources/ExpenseHub.Worker/Dockerfile
+          push: true
+          build-args: GIT_SHA=${{ github.sha }}
+          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          tags: ${{ steps.registry.outputs.name }}/expensehub-worker:${{ github.sha }}
+
+      - name: Referências publicadas
+        run: |
+          {
+            echo "### Imagens publicadas"
+            echo "- \`${{ steps.registry.outputs.name }}/expensehub-web:${{ github.sha }}\`"
+            echo "- \`${{ steps.registry.outputs.name }}/expensehub-worker:${{ github.sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
