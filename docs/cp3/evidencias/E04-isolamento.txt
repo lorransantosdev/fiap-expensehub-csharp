@@ -1,0 +1,67 @@
+# E04 — Isolamento e autorização
+> Get /api/reports (anônimo)
+< 401
+  Content-Type: application/problem+json; charset=utf-8
+  {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.2","title":"Unauthorized","status":401,"traceId":"00-49e42d3ae81e20e5478a27e75aa03f50-4fb4eb9f38318056-00"}
+> Post /api/reports (anônimo)
+  body: {"fromDate":"2026-09-01","toDate":"2026-09-30","scope":"Mine"}
+< 401
+  Content-Type: application/problem+json; charset=utf-8
+  {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.2","title":"Unauthorized","status":401,"traceId":"00-85ba50559732fb8b4bed2ec541b507da-9136535731f79561-00"}
+> Post /api/reports (Bearer <token omitido>)
+  body: {"fromDate":"2026-09-01","toDate":"2026-09-30","scope":"Global"}
+< 403
+  Content-Type: application/json; charset=utf-8
+  {"title":"Operação não permitida","status":403,"detail":"O perfil do usuário não permite solicitar o escopo Global."}
+> Post /api/reports (Bearer <token omitido>)
+  body: {"fromDate":"2026-09-01","toDate":"2026-09-30","scope":"Mine"}
+< 403
+  Content-Type: application/json; charset=utf-8
+  {"title":"Operação não permitida","status":403,"detail":"O perfil do usuário não permite solicitar o escopo Mine."}
+> Get /api/reports/fcda4901-e324-4c16-bb4c-2bba6e5df193 (Bearer <token omitido>)
+< 404
+  Content-Type: application/json; charset=utf-8
+  {"title":"Recurso não encontrado","status":404,"detail":"Solicitação de relatório não encontrada."}
+> Get /api/reports/fcda4901-e324-4c16-bb4c-2bba6e5df193/excel (Bearer <token omitido>)
+< 404
+  Content-Type: application/json; charset=utf-8
+  {"title":"Recurso não encontrado","status":404,"detail":"Solicitação de relatório não encontrada."}
+> Get /api/reports/fcda4901-e324-4c16-bb4c-2bba6e5df193 (Bearer <token omitido>)
+< 404
+  Content-Type: application/json; charset=utf-8
+  {"title":"Recurso não encontrado","status":404,"detail":"Solicitação de relatório não encontrada."}
+> Get /api/reports/fcda4901-e324-4c16-bb4c-2bba6e5df193/excel (Bearer <token omitido>)
+< 404
+  Content-Type: application/json; charset=utf-8
+  {"title":"Recurso não encontrado","status":404,"detail":"Solicitação de relatório não encontrada."}
+> Get /api/reports/857f4dd2-26c9-47ee-bc4f-4b5e6d47edac (Bearer <token omitido>)
+< 404
+  Content-Type: application/json; charset=utf-8
+  {"title":"Recurso não encontrado","status":404,"detail":"Solicitação de relatório não encontrada."}
+> Get /api/reports (Bearer <token omitido>)
+< 200
+  Content-Type: application/json; charset=utf-8
+  []
+> Get /api/reports/857f4dd2-26c9-47ee-bc4f-4b5e6d47edac (Bearer <token omitido>)
+< 200
+  Content-Type: application/json; charset=utf-8
+  {"id":"857f4dd2-26c9-47ee-bc4f-4b5e6d47edac","scope":"Global","fromDate":"2026-09-01","toDate":"2026-09-30","status":"Completed","createdAt":"2026-11-04T23:25:06.0296636Z","startedAt":"2026-11-04T23:25:06.1590246Z","completedAt":"2026-11-04T23:25:06.1873973Z","result":{"generatedAt":"2026-11-04T23:25:06.1873038Z","totalCount":4,"totalAmount":375.0,"byStatus":[{"status":"Draft","count":0,"amount":0},{"status":"Submitted","count":0,"amount":0},{"status":"Approved","count":3,"amount":350.0},{"status":"Rejected","count":0,"amount":0},{"status":"Paid","count":1,"amount":25.0}]},"error":null}
+> Post /api/reports (Bearer <token omitido>)
+  body: {"fromDate":"2026-09-30","scope":"Mine","toDate":"2026-09-01"}
+< 400
+  Content-Type: application/json; charset=utf-8
+  {"title":"Dados inválidos","status":400,"detail":"fromDate deve ser menor ou igual a toDate."}
+> Post /api/reports (Bearer <token omitido>)
+  body: {"fromDate":"2026-09-01","toDate":"2026-09-30","scope":"Everyone"}
+< 400
+  Content-Type: application/json; charset=utf-8
+  {"title":"Dados inválidos","status":400,"detail":"O escopo deve ser Mine ou Global."}
+> Post /api/reports (Bearer <token omitido>)
+  body: {"fromDate":"2026-09-01","ownerId":"outro-usuario","toDate":"2026-09-30","scope":"Mine"}
+< 400
+  Content-Type: application/problem+json; charset=utf-8
+  {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"One or more validation errors occurred.","status":400,"errors":{"request":["The request field is required."],"$.ownerId":["The JSON property 'ownerId' could not be mapped to any .NET member contained in type 'ExpenseHub.Api.Dtos.CreateReportRequest'."]},"traceId":"00-810620a00da33221d328a5ef897d3763-f90739036044773c-00"}
+> Get /api/reports/233da184-3f72-4055-87fe-9ad9450a2625 (Bearer <token omitido>)
+< 404
+  Content-Type: application/json; charset=utf-8
+  {"title":"Recurso não encontrado","status":404,"detail":"Solicitação de relatório não encontrada."}

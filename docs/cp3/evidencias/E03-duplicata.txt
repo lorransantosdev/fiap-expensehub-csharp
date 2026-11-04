@@ -1,0 +1,17 @@
+# E03 — Duplicata após reiniciar o worker
+Antes: status=Completed completedAt=2026-11-04T23:25:05.2660434Z generatedAt=2026-11-04T23:25:05.2565719Z total=175
+   Container expensehub-worker-1 Restarting 
+   Container expensehub-worker-1 Started 
+Republicação pelo painel (POST http://localhost:15672/api/exchanges/%2F/amq.default/publish): payload {"reportId":"fcda4901-e324-4c16-bb4c-2bba6e5df193"}
+  routed=True
+  fila expensehub.reports: durable=True ready=0 unacked=0 consumers=1
+Depois: status=Completed completedAt=2026-11-04T23:25:05.2660434Z generatedAt=2026-11-04T23:25:05.2565719Z total=175
+Resultado idêntico: True
+Solicitações de employee-a na listagem: 4 (nenhuma nova criada pela reentrega)
+  worker-1  |       Mensagem do relatório fcda4901-e324-4c16-bb4c-2bba6e5df193 recebida (redelivered=False).
+  worker-1  |       Relatório fcda4901-e324-4c16-bb4c-2bba6e5df193 iniciado (tentativa 1, escopo Mine).
+  worker-1  |       Relatório fcda4901-e324-4c16-bb4c-2bba6e5df193 concluído com 3 reembolsos.
+  worker-1  |       Mensagem do relatório fcda4901-e324-4c16-bb4c-2bba6e5df193 confirmada (ack) com desfecho Completed.
+  worker-1  |       Mensagem do relatório fcda4901-e324-4c16-bb4c-2bba6e5df193 recebida (redelivered=False).
+  worker-1  |       Relatório fcda4901-e324-4c16-bb4c-2bba6e5df193 já está Completed; duplicata ignorada sem novo efeito.
+  worker-1  |       Mensagem do relatório fcda4901-e324-4c16-bb4c-2bba6e5df193 confirmada (ack) com desfecho Duplicate.
